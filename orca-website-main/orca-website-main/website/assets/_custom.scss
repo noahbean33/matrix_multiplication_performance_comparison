@@ -1,0 +1,50 @@
+/* Style for 'about' shortcode */
+.about-box {
+   padding: 18px;
+   line-height: 24px;
+   border-radius: 4px;
+   background: #eff8ff;
+   border-left: 4px solid #006090;
+}
+
+.notice {
+   color: #000 !important;
+}
+
+/* Dark theme */
+@media (prefers-color-scheme:dark) {
+   .about-box {
+      color: #ddd;
+      background: #023;
+   }
+
+   .notice {
+      color: #ddd !important;
+   }
+}
+
+/* Full-width logo in top-left of page. */
+.book-brand img {
+   width: 100%;
+   height: auto;
+}
+
+/* Override justification of menu item to place disclosure triangles closer to
+menu text. */
+.book-menu {
+   .justify-between
+   {
+      justify-content: flex-start;
+   }
+   input.toggle + label::after {
+      content: "▸";
+      padding-left: 1ex;
+   }
+   input.toggle:checked + label::after {
+      content: "▾";
+      padding-left: 1ex;
+   }
+}
+
+.no-wrap-col-1 td:nth-of-type(1) { white-space: nowrap; }
+.no-wrap-col-2 td:nth-of-type(2) { white-space: nowrap; }

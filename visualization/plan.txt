@@ -1,0 +1,154 @@
+Great question. Treat this like a real experiment: raw, tidy, queryable. You want **append-only, machine-readable, and easy to slice across algos/nodes/sizes**.
+
+# Recommended approach (simple → robust)
+
+## 1) Use CSV (tidy) for raw runs
+
+* Easiest to append from C/CUDA/MPI.
+* One **row per trial**.
+* Keep a **stable column schema** across all implementations.
+
+**Example path layout**
+
+```
+results/
+  2025-08-14/
+    raw.csv
+    env.json          # node+software snapshot for this session
+    figures/          # plots generated from raw.csv
+  2025-08-15/
+    raw.csv
+    env.json
+```
+
+**Suggested CSV header (copy/paste)**
+
+```
+run_id,datetime_iso,hostname,slurm_job_id,node_id,cpu_model,gpu_model,gpu_count,cpu_sockets,cpu_cores,cpu_threads,mem_gb
+algo,impl,precision,n,alpha,beta,tiles_Mc,tiles_Nc,tiles_Kc,mr,nr,threads,mpi_ranks,grid_p,grid_q,gpus
+compiler,compiler_version,compile_flags,blas_vendor,blas_version,cuda_version,mpi_vendor,mpi_version,git_commit
+trial,time_s,gflops,bytes_read,bytes_written,arith_intensity,l1_mpki,l2_mpki,l3_mpki,dram_bw_gbs,energy_j,gflops_per_w,notes
+```
+
+**Notes**
+
+* `algo` = `gemm`; `impl` = `naive|blocked|mk|openmp|cuda_naive|cuda_tiled|cuda_wmma|mpi_summa|mkl|openblas|blis`
+* Leave metrics blank if N/A (e.g., GPU metrics on CPU run).
+* Compute `gflops = 2*n^3 / (time_s*1e9)` in your driver and print it.
+
+**C-style print line (pseudo)**
+
+```c
+printf("%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%.1f,%s,%s,%d,%d,%d,%d,%d,%s,%s,\"%s\",%s,%s,%s,%s,%s,%s,%d,%.6f,%.3f,%.0f,%.0f,%.4f,%.2f,%.2f,%.2f,%.2f,%.1f,%.3f,\"%s\"\n",
+  run_id, datetime_iso, hostname, slurm_job_id, node_id, cpu_model, gpu_model, gpu_count,
+  cpu_sockets, cpu_cores, cpu_threads, mem_gb,
+  algo, impl, precision, n, alpha, beta, tiles_Mc, tiles_Nc, tiles_Kc, mr, nr, threads, mpi_ranks, grid_p, grid_q, gpus,
+  compiler, compiler_version, compile_flags, blas_vendor, blas_version, cuda_version, mpi_vendor, mpi_version, git_commit,
+  trial, time_s, gflops, bytes_read, bytes_written, arith_intensity,
+  l1_mpki, l2_mpki, l3_mpki, dram_bw_gbs, energy_j, gflops_per_w, notes);
+```
+
+## 2) Snapshot environment in JSON
+
+Write one JSON file per session to avoid repeating static info in every row.
+
+**`env.json` example**
+
+```json
+{
+  "datetime_iso": "2025-08-14T11:38:00-07:00",
+  "hostname": "coeus-gpu-03",
+  "slurm_job_id": "1234567",
+  "cpu": {"model":"Intel Xeon Gold 6348","sockets":2,"cores":56,"threads":112,"l1d_kb":1920,"l2_mb":84,"l3_mb":96},
+  "gpu": {"model":"A100-PCIE-40GB","count":1,"driver":"550.54"},
+  "memory_gb": 512,
+  "os": {"name":"Rocky Linux","version":"9.3"},
+  "compiler": {"name":"gcc","version":"13.2","flags":"-O3 -march=native -ffp-contract=fast"},
+  "blas": {"vendor":"OpenBLAS","version":"0.3.26"},
+  "cuda": {"version":"12.4"},
+  "mpi": {"vendor":"OpenMPI","version":"4.1.6"},
+  "git_commit": "a1b2c3d"
+}
+```
+
+Generate it once at job start (`scripts/probe_env.sh`) and commit alongside the day’s `raw.csv`.
+
+## 3) (Optional) Promote to Parquet after collection
+
+* Keep CSV as the canonical “field log”.
+* Convert to **Parquet** for fast queries at analysis time (Python/R). Don’t *only* store Parquet—plain text CSV is future-proof.
+
+## 4) (Optional) SQLite for querying & joins
+
+If you’ll run lots of cross-day analyses, keep a **single `results.db`** with tables:
+
+* `runs` (the CSV columns),
+* `env` (loaded from `env.json` with a FK on `hostname+date` or `run_id` prefix),
+* `figures` (store path + query used to generate).
+
+This makes “give me all DGEMM OpenMP runs on dual-socket nodes with ≥1 TB/s DRAM BW” a one-liner.
+
+## 5) Filenaming & run IDs
+
+* `run_id = <YYYYMMDD>-<HHMMSS>-<host>-<algo>-<impl>-<uuid8>`
+* Daily file: `results/2025-08-14/raw.csv`
+* Append-only; never edit rows post hoc. If you fix a bug, **new run, new id**.
+
+## 6) Capture provenance automatically
+
+At program start, print:
+
+* `module list`
+* `gcc --version`, `nvcc --version`, `mpirun --version`
+* `lscpu`, `numactl -H`
+* `nvidia-smi --query-gpu=name,driver_version --format=csv`
+* Slurm info: `scontrol show job $SLURM_JOB_ID | sed 's/,/;/g'` (avoid commas in CSV)
+
+Redirect to `logs/<run_id>.txt`. Put the **path to the log** in the CSV `notes` field.
+
+## 7) Example: minimal CSV row (human-readable)
+
+```
+20250814-113845-coeus03-gemm-openmp-7fa9b2c3,2025-08-14T11:38:45-07:00,coeus03,1234567,nodeA,
+"Intel Xeon Gold 6348","A100-PCIE-40GB",0,2,56,112,512,
+gemm,openmp,double,8192,1.0,0.0,256,256,512,8,8,56,1,1,1,0,
+gcc,13.2,"-O3 -march=native -ffp-contract=fast",OpenBLAS,0.3.26,,
+OpenMPI,4.1.6,a1b2c3d,1,2.431,4540.2,1572864000,1572864000,8.53,
+0.8,1.2,2.7,210.5,13500.0,336.1,"logs/20250814-113845-...txt"
+```
+
+## 8) Derivative datasets for figures
+
+Don’t regenerate plots from scratch each time—save the **query and snapshot** used for each figure.
+
+* `figures/roofline_cpu.csv` (aggregated from raw)
+* `figures/speedup_openmp.csv`
+* `figures/scaling_mpi_strong.csv`
+* Alongside each, a small `*.meta.json`:
+
+```json
+{"source":"../2025-08-14/raw.csv","query":"algo='gemm' and impl in ('openmp','mkl') and precision='double'","generated_at":"2025-08-14T12:10:00-07:00"}
+```
+
+## 9) When you add CUDA & MPI
+
+* Keep the **same columns**. For GPU-only metrics (e.g., SM occupancy), either add new optional columns (e.g., `gpu_occ`, `gpu_dram_util`) or store them in a `metrics.json` per run and put its path in `notes`. Consistency > perfection.
+
+## 10) Sanity checks (automate)
+
+Before appending a row:
+
+* Validate column count & types.
+* Verify `gflops ≈ 2*n^3/time_s/1e9` within 1%.
+* Ensure `trial` starts at 1 and increments per `(run_id,impl,n)`.
+
+---
+
+### TL;DR
+
+* **Raw = one tidy CSV per day (append-only).**
+* **Env snapshot = `env.json` per day.**
+* Optionally mirror into **Parquet** and/or **SQLite** for analysis.
+* Use stable **column names** so all CPU/GPU/MPI runs land in the same table.
+* Log everything; put the log path in the `notes` column.
+
