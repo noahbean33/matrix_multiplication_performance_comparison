@@ -1,9 +1,0 @@
-[submodule "website/themes/hugo-book"]
-	path = website/themes/hugo-book
-	url = https://github.com/alex-shpak/hugo-book
-[submodule "website/themes/hugo-notice"]
-	path = website/themes/hugo-notice
-	url = https://github.com/martignoni/hugo-notice.git
-[submodule "website/themes/hugo-admonitions"]
-	path = website/themes/hugo-admonitions
-	url = https://github.com/KKKZOZ/hugo-admonitions
