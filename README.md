@@ -1,130 +1,172 @@
-# # **Matrix Multiplication Performance Comparison**
+# Matrix Multiplication Performance Comparison - HPC Benchmarking
 
-This repository contains the implementation and analysis of matrix multiplication using Python, C, and SystemVerilog. It explores the performance, scalability, and trade-offs between these methods for various matrix sizes.
+## Project Overview
 
----
+This project uses the **ORCA cluster** to experiment with various High-Performance Computing (HPC) optimizations using matrix multiplication as a benchmark. The goal is to systematically evaluate and compare different optimization techniques to understand their impact on computational performance.
 
-## **Overview**
-Matrix multiplication is a fundamental algorithm widely used in scientific computing, signal pprocessing, and machine learning. This project evaluates different implementations of matrix multiplication by comparing their execution times in order to assess the quantitive and qualitative trade-offs involved. 
+## Optimization Techniques
 
----
+We will experiment with the following optimization approaches:
 
-## **Features**
-1. **Implementations:**
-   - **Python:** Basic triple-loop and optimized NumPy implementations.
-   - **C:** Unoptimized and compiler-optimized (`-O3`) implementations.
-   - **SystemVerilog:** Hardware-based implementation.
+- **CUDA** - GPU acceleration using NVIDIA CUDA
+- **MPI** - Message Passing Interface for distributed computing
+- **OpenMP** - Shared-memory parallel programming
+- **C++ Compiler Optimizations** - Various compiler flags and optimization levels (-O1, -O2, -O3, -Ofast)
+- **Data Structures** - Different matrix storage formats (row-major, column-major, blocked)
+- **Algorithms** - Naive, blocked/tiled, Strassen's algorithm, cache-oblivious
+- **Cache Optimizations** - Loop tiling, cache blocking, prefetching
 
-2. **Performance Analysis:**
-   - Comparison across varying matrix sizes (2×2 to 1002×1002).
-   - Execution time measurements and scalability evaluation in units of seconds.
+## Project Structure
 
-3. **Trade-offs:**
-   - Ease of implementation versus computational efficiency.
-   - Hardware complexity versus software complexity.
+```
+matrix_multiplication_performance_comparison/
+├── c/                          # C/C++ implementations
+│   ├── src/                    # Source files
+│   │   ├── naive/             # Naive implementation
+│   │   ├── openmp/            # OpenMP parallelization
+│   │   ├── mpi/               # MPI distributed implementation
+│   │   ├── cuda/              # CUDA GPU implementation
+│   │   ├── cache_opt/         # Cache optimization techniques
+│   │   ├── compiler_opt/      # Compiler optimization experiments
+│   │   └── algorithms/        # Advanced algorithms (Strassen, etc.)
+│   ├── include/               # Header files
+│   ├── benchmarks/            # Benchmark runner scripts
+│   ├── Makefile               # Build configuration
+│   └── README.md              # C++ specific documentation
+│
+├── python/                     # Python analysis and visualization
+│   ├── analysis/              # Data analysis scripts
+│   ├── visualization/         # Plotting and graphing
+│   ├── data_processing/       # CSV processing utilities
+│   ├── requirements.txt       # Python dependencies
+│   └── README.md              # Python specific documentation
+│
+├── results/                    # Benchmark results
+│   ├── raw/                   # Raw CSV data
+│   ├── processed/             # Processed data
+│   ├── plots/                 # Generated graphs and figures
+│   └── reports/               # Summary reports
+│
+├── scripts/                    # Utility scripts
+│   ├── slurm/                 # SLURM job submission scripts
+│   ├── build/                 # Build automation
+│   └── benchmark/             # Automated benchmark runners
+│
+├── docs/                       # Documentation
+│   ├── setup.md               # ORCA cluster setup guide
+│   ├── experiments.md         # Experiment methodology
+│   └── results_summary.md     # Results and findings
+│
+├── .gitignore                  # Git ignore rules
+├── LICENSE                     # Project license
+└── README.md                   # This file
+```
 
-4. **Challenges Addressed:**
-   - Developing scalable HDL implementations for arbitrary matrix sizes.
-   - Overcoming hardware synthesis limitations.
+## Experimental Workflow
 
----
+1. **Implementation Phase**
+   - Develop matrix multiplication implementations for each optimization technique
+   - Ensure correctness with unit tests
+   - Document implementation details
 
-## **Files and Directory Structure**
+2. **Benchmarking Phase**
+   - Run experiments on ORCA cluster with varying matrix sizes
+   - Test different thread counts, process counts, and GPU configurations
+   - Collect timing data, memory usage, and other metrics
+   - Export results to CSV format
 
-### **Source Files**
-- `python/`: Contains Python scripts for basic and NumPy-based implementations.
-- `c/`: Includes C Program.
-- `systemverilog/`: Contains the SystemVerilog modules and testbenches for HDL-based implementation.
+3. **Analysis Phase**
+   - Load and process CSV data using Python
+   - Calculate speedup, efficiency, and scalability metrics
+   - Generate comparative visualizations
+   - Identify performance bottlenecks and optimization opportunities
 
-### **Reports**
-- `Matrix_Multiplication_Performance_Comparison_ECE_472_Project.pdf`: Detailed analysis of implementation results, challenges, and lessons learned.
-- `results/`: Contains raw data and plots comparing execution times.
+4. **Documentation Phase**
+   - Document findings and insights
+   - Create performance comparison reports
+   - Generate publication-ready figures
 
----
+## Getting Started
 
-## **How to Run**
+### Prerequisites
 
-### **1. Prerequisites**
-- Python 3 with NumPy installed.
-- GCC or any standard C compiler.
-- Xilinx Vivado, EDA Playgrounnd, or any Verilog simulation tool.
+- Access to ORCA cluster
+- C/C++ compiler with C++11 support (gcc/g++)
+- CUDA toolkit (for GPU implementations)
+- MPI library (OpenMPI or MPICH)
+- Python 3.8+ with pandas, matplotlib, seaborn, numpy
+- SLURM workload manager knowledge
 
-### **2. Steps**
-1. Clone the repository:
+### Building the Project
+
 ```bash
-   git clone https://github.com/noahbean33/Matrix_Multiplication_Performance_Comparison.git
-   cd Matrix_Multiplication_Performance_Comparison
+cd c/
+make all                    # Build all implementations
+make cuda                   # Build CUDA version
+make mpi                    # Build MPI version
+make openmp                 # Build OpenMP version
 ```
 
-   ### **2. Steps**   
-#### **Run Python implementations**:
-   ```bash
-cd python
-python3 matrix_multiplication_numpy.py
-python3 matrix_multiplication_python.py
+### Running Benchmarks
+
+```bash
+# Local testing
+./c/bin/naive_mm 1024
+
+# Submit to ORCA cluster
+sbatch scripts/slurm/benchmark_all.sh
 ```
 
-#### Run C implementations:
-   ```bash
-cd c
-gcc -o matrix_multiplication matrix_multiplication.c
-./basic
-gcc -O3 -o matrix_multiplication matrix_multiplication.c
-./optimized
-   ```
+### Analyzing Results
 
-#### Run SystemVerilog implementations:
-   ```bash
-cd SystemVerilog
-xrun -sv -timescale 1ns/1ns -access +rw matrix_multiplier_tb.sv (Cadence Xcelium 23.09)
-   ```
+```bash
+cd python/
+pip install -r requirements.txt
+python analysis/compare_implementations.py
+python visualization/plot_speedup.py
+```
 
-# Additional Details
+## Benchmark Metrics
 
-**Assuming Cadence Xcelium 23.09 on EDA Playground**
-**matrix_multiplication.sv and matrix_multiplication_tb.sv can be set up in a project on Xilinx Vivado**
+- **Execution Time** - Wall-clock time for matrix multiplication
+- **GFLOPS** - Giga floating-point operations per second
+- **Speedup** - Performance relative to baseline (naive implementation)
+- **Efficiency** - Speedup / number of processors
+- **Scalability** - Performance vs. problem size and resource count
+- **Memory Usage** - Peak memory consumption
+- **Cache Performance** - Cache hit/miss rates (where available)
 
-## Results
+## Matrix Sizes for Testing
 
-The performance evaluation highlighted the following:
+We will test with the following square matrix dimensions:
+- Small: 64×64, 128×128, 256×256
+- Medium: 512×512, 1024×1024, 2048×2048
+- Large: 4096×4096, 8192×8192
 
-- **Python (Basic):** Easy to implement but slow for large matrices.
-- **NumPy:** Leveraged optimized C libraries for the fastest performance.
-- **C (Optimized):** Balanced speed and control, suitable for most use cases.
-- **SystemVerilog:** Demonstrating excellent scalability and speed but with higher complexity.
+## Contributing
 
-For detailed graphs and analysis, see `Matrix_Multiplication_Performance_Comparison_ECE_472_Project.pdf` in the repository.
+When adding new implementations or experiments:
+1. Follow the existing code structure
+2. Add appropriate documentation
+3. Include benchmark scripts for SLURM
+4. Update this README with new findings
 
----
+## ORCA Cluster Specifics
 
-## Lessons Learned
-
-- Hardware-level parallelism is critical for scaling computationally intensive tasks.
-- Simulation tools like Xilinx Vivado streamline rapid prototyping.
-- Compiler optimizations significantly improve software performance with minimal effort.
-
----
-
-## Future Work
-
-- Implement floating-point support in HDL.
-- Deploy on advanced FPGA hardware to confirm simulation results.
-- Explore hybrid software-hardware approaches for computational efficiency.
-
----
-
-## Contributions
-
-Contributions to enhance the implementations or add new features are welcome!
-
----
+- Use SLURM for job submission
+- Request appropriate resources (CPUs, GPUs, memory)
+- Be mindful of cluster usage policies
+- Store large datasets in appropriate scratch space
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+See LICENSE file for details.
 
----
+## References
 
-## Acknowledgments
+- ORCA Documentation: [Link to ORCA cluster documentation]
+- Project Report: See `Matrix_Multiplication_Performance_Comparison_ECE_472_Project.pdf`
 
-Thanks to the authors of the referenced books, tools, and tutorials that supported this project.
+## Contact
+
+For questions or collaboration, please open an issue or contact the project maintainer.

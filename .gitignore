@@ -1,0 +1,90 @@
+# Orca website files
+orca-website-main/
+
+# Build artifacts
+*.o
+*.out
+*.exe
+*.a
+*.so
+*.dylib
+*.dll
+
+# Compiled executables
+c/bin/
+c/build/
+c/dist/
+
+# CUDA compiled files
+*.cubin
+*.ptx
+*.i
+*.ii
+*.gpu
+*.fatbin
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Slurm output files
+slurm-*.out
+*.out.%j
+
+# Core dumps
+core
+core.*
+
+# Performance profiling output
+*.prof
+*.nvprof
+*.nvvp
+gmon.out
+perf.data*
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake
+!CMakeLists.txt
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
