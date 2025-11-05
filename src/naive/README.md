@@ -10,7 +10,7 @@ Establish baseline performance metrics for matrix multiplication without any opt
 - Triple nested loop (i, j, k)
 - Standard row-major C array storage: `A[i][j]` or `A[i*N + j]`
 - Double precision floating point (`double`)
-- No compiler optimizations beyond `-O2` for fair baseline
+- No compiler optimizations beyond `-O1` for fair baseline
 
 ### Output Format
 CSV with columns:
