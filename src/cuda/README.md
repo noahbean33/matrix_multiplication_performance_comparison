@@ -1,8 +1,49 @@
 # CUDA Matrix Multiplication - GPU Acceleration
 
+## Status
+
+✅ **CORE IMPLEMENTATION COMPLETED**
+
+**Implemented**:
+- Naive CUDA kernel (global memory only)
+- Tiled CUDA kernel with shared memory optimization
+- CSV output with comprehensive timing metrics
+- High-resolution timing for kernel and memory transfers
+- GFLOPS calculation
+- Automatic correctness verification
+- Block size variations (16×16, 32×32)
+- Matrix sizes: 512, 1024, 2048, 4096
+
+**Pending**:
+- cuBLAS comparison (Experiment 6)
+- Mixed precision FP16/FP32 (Experiment 7)
+- Pinned memory and async transfers (Experiment 8)
+- Bank conflict avoidance optimization
+- Additional block size variations (8×8, 16×32, etc.)
+
 ## Purpose
 
 Quantify GPU acceleration performance and identify optimal CUDA kernel configurations for massive parallelism.
+
+## Usage
+
+```bash
+# Compile
+make
+
+# Run benchmarks
+./matrix_multiplication > cuda_results.csv
+
+# Or use make targets
+make benchmark
+```
+
+## Output Format
+
+CSV with columns:
+```
+timestamp,implementation,matrix_size,total_time_ms,total_gflops,kernel_time_ms,h2d_time_ms,d2h_time_ms,block_size,node,verification
+```
 
 ## Suggested Experiments
 
@@ -131,3 +172,34 @@ Total time = H2D transfer + Kernel + D2H transfer
 5. **Mixed precision (FP16)** - 2-8x on Tensor Cores (⭐⭐⭐⭐)
 
 **Total Potential**: 1000-5000 GFLOPS (vs 5-10 GFLOPS CPU)
+
+## Implementation Notes
+
+### Main Implementation
+- **matrix_multiplication.cu**: Production benchmarking code implementing naive and tiled kernels
+
+### Legacy Files (Reference Only)
+- **01_naive.cu**: Original naive implementation (superseded)
+- **02_step1.cu**: Original tiled implementation (superseded)
+- **03_step.cu**: Original vectorized implementation (reference for future optimization)
+
+The refactored `matrix_multiplication.cu` consolidates these implementations into a comprehensive benchmarking framework with:
+- Professional documentation
+- Consistent CSV output format matching the naive CPU implementation
+- Comprehensive timing breakdown (kernel, H2D, D2H)
+- Automatic verification
+- Support for multiple configurations
+
+### Key Design Decisions
+
+1. **Template-based tiling**: Uses C++ templates to support different tile sizes at compile time for better performance
+2. **Separate timing**: Distinguishes between kernel execution time and memory transfer overhead
+3. **Fixed seed**: Uses `srand(42)` for reproducible benchmarks
+4. **Error checking**: All CUDA calls wrapped with error checking macros
+5. **Verification**: Each benchmark automatically verifies correctness against CPU reference
+
+### Compilation Requirements
+
+- CUDA Toolkit 10.0 or later
+- GPU with compute capability 6.0 or higher (adjust `-arch` in Makefile)
+- C++11 compatible compiler

@@ -1,0 +1,76 @@
+<style type="text/css">
+.home-links {
+   font-size: 20px;
+   list-style:none;
+   columns: 2;
+   -webkit-columns: 2;
+   -moz-columns: 2;
+}
+
+@media (max-width: 500px), (min-width: 896px) and (max-width: 990px) {
+  .home-links {
+    columns: 1;
+    -webkit-columns: 1;
+    -moz-columns: 1;
+  }
+}
+
+.home-links li {
+   margin: 0px;
+   padding-top: 5px;
+   padding-bottom: 5px;
+   -webkit-column-break-inside: avoid;
+   page-break-inside: avoid;
+   break-inside: avoid;
+}
+
+.home-links .icon {
+   font-family: 'Material Icons';
+   font-weight: normal;
+   font-style: normal;
+   font-size: 32px;
+   color: #0055bb;
+   line-height: 1;
+   letter-spacing: normal;
+   text-transform: none;
+   display: inline-block;
+   white-space: nowrap;
+   word-wrap: normal;
+   direction: ltr;
+   vertical-align: top;
+}
+
+.home-links .text {
+   padding-left: 1.75ex;
+}
+
+/* Dark theme */
+@media (prefers-color-scheme:dark) {
+   .home-links .icon {
+      color: #84b2ff;
+   }
+}
+</style>
+
+<ul class="home-links">
+   <li>
+      <a href="{{ (.Site.GetPage "about").RelPermalink }}">
+         <span class="icon">groups</span><span class="text">About</span>
+      </a>
+   </li>
+   <li>
+      <a href="{{ (.Site.GetPage "docs/tutorial.md").RelPermalink }}">
+         <span class="icon">pin_drop</span><span class="text">Getting Started</span>
+      </a>
+   </li>
+   <li>
+      <a href="{{ (.Site.GetPage "docs").RelPermalink }}">
+         <span class="icon">menu_book</span><span class="text">Documentation</span>
+      </a>
+   </li>
+   <li>
+      <a href="{{ (.Site.GetPage "contact-us").RelPermalink }}">
+         <span class="icon">mail</span><span class="text">Contact Us</span>
+      </a>
+   </li>
+</ul>

@@ -1,0 +1,9 @@
+{{ $ref := .Get "href" }}
+{{ $bgstyle := "" }}
+{{ with .Get "color" }}
+   {{ $bgstyle = fmt.Printf "background-color: %s;" . | safeCSS }}
+{{ end }}
+
+<div class="centered">
+<a href="{{ $ref }}" class="markdown-btn" style="{{ $bgstyle }}">{{- .Inner | safeHTML -}}</a>
+</div>
