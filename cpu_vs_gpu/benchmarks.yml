@@ -1,0 +1,34 @@
+suite: fpga-gpu-cpu-arch-bench
+workloads:
+  - name: coupled_pde_2d
+    class: local+global
+    grid: [256, 512, 1024]
+    fields: [u, v, p, T]
+    precision: fp32
+    steps: 1000
+    solver: jacobi_fixed_100
+    bc: periodic
+  - name: streaming_stencil_2d
+    class: local
+    grid: [512, 1024, 2048]
+    stencil: 5pt
+    precision: fp32
+    steps: 2000
+  - name: spmv_structured
+    class: sparse
+    matrix: poisson_2d_5pt
+    sizes: [1e5, 1e6]
+    layout: csr
+    precision: fp32
+  - name: pointer_chase
+    class: irregular
+    pattern: predictable|random
+    length: [1e6]
+  - name: cnn_inference_small
+    class: ml_stream
+    model: conv2d_3x3_32ch
+    batch: 1
+    precision: int8
+common:
+  metrics: [time, bw, energy, fpga_resources, gpu_occupancy]
+  runs: [baseline, tuned]
